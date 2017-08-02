@@ -140,7 +140,7 @@ func RunClient(configs []DbConnectionData) {
 
 	// go PromptReader(cmdc, logc, quitc)
 	go LogPrinter(logc)
-	go ResultDisplayer(resc, quitc)
+	go DisplayResults(resc, quitc)
 
 	for {
 		select {
@@ -217,28 +217,6 @@ func LogPrinter(logc chan string) {
 		// case msg := <-logc:
 		// 	fmt.Printf("log: %s\n", msg)
 		case <-logc:
-		}
-	}
-}
-
-func ResultDisplayer(resc chan ProcessList, quitc chan bool) {
-	var status map[string]ProcessList = make(map[string]ProcessList)
-	t := time.NewTimer(5 * time.Second)
-
-	var in chan map[string]ProcessList = make(chan map[string]ProcessList)
-	go DisplayResults(in, quitc)
-
-	for {
-		select {
-		case result := <-resc:
-			_, notNew := status[result.Conn.data.Name]
-			status[result.Conn.data.Name] = result
-			if !notNew {
-				in <- status
-			}
-		case <-t.C:
-			in <- status
-			t.Reset(5 * time.Second)
 		}
 	}
 }
