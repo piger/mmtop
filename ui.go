@@ -67,8 +67,21 @@ func DisplayWord(s string, x, y int) (count int) {
 	return
 }
 
+// Draw a box line, like "+----------------+"
+func DrawBoxLine(x, y, length int, fg, bg termbox.Attribute) {
+	termbox.SetCell(x, y, '+', fg, bg)
+	for i := x + 1; i < length-2; i++ {
+		termbox.SetCell(i, y, '-', fg, bg)
+	}
+	termbox.SetCell(x+length-1, y, '+', fg, bg)
+}
+
 func DrawProcessList(status map[string]ProcessList) {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorBlack)
+	fg := termbox.ColorDefault
+	bg := termbox.ColorDefault
+
+	// clear the screen first
+	termbox.Clear(fg, bg)
 
 	// calculate header lengths
 	sName := len("Name")
@@ -94,17 +107,13 @@ func DrawProcessList(status map[string]ProcessList) {
 		}
 	}
 
-	// draw header
+	// start drawing
 	width, _ := termbox.Size()
 	x := 0
 	y := 0
-	termbox.SetCell(x, y, '+', termbox.ColorDefault, termbox.ColorBlack)
 
-	for x = 1; x < width-1; x++ {
-		termbox.SetCell(x, y, '-', termbox.ColorDefault, termbox.ColorBlack)
-	}
-
-	termbox.SetCell(width-1, y, '+', termbox.ColorDefault, termbox.ColorBlack)
+	// draw first header box line
+	DrawBoxLine(x, y, width, fg, bg)
 
 	x = 0
 	y += 1
@@ -157,11 +166,7 @@ func DrawProcessList(status map[string]ProcessList) {
 	// draw the bottom part of the header
 	y += 1
 	x = 0
-	termbox.SetCell(x, y, '+', termbox.ColorDefault, termbox.ColorBlack)
-	for x = 1; x < width-1; x++ {
-		termbox.SetCell(x, y, '-', termbox.ColorDefault, termbox.ColorBlack)
-	}
-	termbox.SetCell(width-1, y, '+', termbox.ColorDefault, termbox.ColorBlack)
+	DrawBoxLine(x, y, width, fg, bg)
 
 	for hostname, plist := range status {
 		for _, process := range plist.Processes {
@@ -217,6 +222,10 @@ func DrawProcessList(status map[string]ProcessList) {
 			termbox.SetCell(width-1, y, '|', termbox.ColorDefault, termbox.ColorBlack)
 		}
 	}
+
+	x = 0
+	y += 1
+	DrawBoxLine(x, y, width, fg, bg)
 
 	termbox.Flush()
 }
