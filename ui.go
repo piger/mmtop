@@ -76,6 +76,14 @@ func DrawBoxLine(x, y, length int, fg, bg termbox.Attribute) {
 	termbox.SetCell(x+length-1, y, '+', fg, bg)
 }
 
+func DrawTableCell(s string, maxlength, x, y int, fg, bg termbox.Attribute) int {
+	termbox.SetCell(x, y, '|', fg, bg)
+	x += 2
+	x += DisplayWord(s, x, y)
+	x += (maxlength - len(s)) + 1
+	return x
+}
+
 func DrawProcessList(status map[string]ProcessList) {
 	fg := termbox.ColorDefault
 	bg := termbox.ColorDefault
@@ -117,51 +125,18 @@ func DrawProcessList(status map[string]ProcessList) {
 
 	x = 0
 	y += 1
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Hostname", x, y)
-	x += (sName - len("Hostname")) + 1
+	x = DrawTableCell("Hostname", sName, x, y, fg, bg)
+	x = DrawTableCell("Id", sId, x, y, fg, bg)
+	x = DrawTableCell("User", sUser, x, y, fg, bg)
+	x = DrawTableCell("Host", sHost, x, y, fg, bg)
+	x = DrawTableCell("Db", sDb, x, y, fg, bg)
+	x = DrawTableCell("Command", sCommand, x, y, fg, bg)
+	x = DrawTableCell("Time", sTime, x, y, fg, bg)
+	x = DrawTableCell("State", sState, x, y, fg, bg)
+	x = DrawTableCell("Info", len("Info"), x, y, fg, bg)
 
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Id", x, y)
-	x += (sId - len("Id")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("User", x, y)
-	x += (sUser - len("User")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Host", x, y)
-	x += (sHost - len("Host")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Db", x, y)
-	x += (sDb - len("Db")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Command", x, y)
-	x += (sCommand - len("Command")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Time", x, y)
-	x += (sTime - len("Time")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("State", x, y)
-	x += (sState - len("State")) + 1
-
-	termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
-	x += 2
-	x += DisplayWord("Info", x, y)
-
-	termbox.SetCell(width-1, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+	// draw the last '|' of the table
+	termbox.SetCell(width-1, y, '|', fg, bg)
 
 	// draw the bottom part of the header
 	y += 1
@@ -173,53 +148,53 @@ func DrawProcessList(status map[string]ProcessList) {
 			x = 0
 			y += 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(hostname, x, y)
 			x += (sName - len(hostname)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			id := strconv.Itoa(process.Id)
 			x += DisplayWord(id, x, y)
 			x += (sId - len(id)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.User, x, y)
 			x += (sUser - len(process.User)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.Host, x, y)
 			x += (sHost - len(process.Host)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.Db, x, y)
 			x += (sDb - len(process.Db)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.Command, x, y)
 			x += (sCommand - len(process.Command)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			t := strconv.Itoa(process.Timestamp)
 			x += DisplayWord(t, x, y)
 			x += (sTime - len(t)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.State, x, y)
 			x += (sState - len(process.State)) + 1
 
-			termbox.SetCell(x, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(x, y, '|', fg, bg)
 			x += 2
 			x += DisplayWord(process.Info, x, y)
 
-			termbox.SetCell(width-1, y, '|', termbox.ColorDefault, termbox.ColorBlack)
+			termbox.SetCell(width-1, y, '|', fg, bg)
 		}
 	}
 
