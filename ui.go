@@ -148,52 +148,19 @@ func DrawProcessList(status map[string]ProcessList) {
 			x = 0
 			y += 1
 
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(hostname, x, y)
-			x += (sName - len(hostname)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
+			x = DrawTableCell(hostname, sName, x, y, fg, bg)
 			id := strconv.Itoa(process.Id)
-			x += DisplayWord(id, x, y)
-			x += (sId - len(id)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.User, x, y)
-			x += (sUser - len(process.User)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.Host, x, y)
-			x += (sHost - len(process.Host)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.Db, x, y)
-			x += (sDb - len(process.Db)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.Command, x, y)
-			x += (sCommand - len(process.Command)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
+			x = DrawTableCell(id, sId, x, y, fg, bg)
+			x = DrawTableCell(process.User, sUser, x, y, fg, bg)
+			x = DrawTableCell(process.Host, sHost, x, y, fg, bg)
+			x = DrawTableCell(process.Db, sDb, x, y, fg, bg)
+			x = DrawTableCell(process.Command, sCommand, x, y, fg, bg)
 			t := strconv.Itoa(process.Timestamp)
-			x += DisplayWord(t, x, y)
-			x += (sTime - len(t)) + 1
+			x = DrawTableCell(t, sTime, x, y, fg, bg)
+			x = DrawTableCell(process.State, sState, x, y, fg, bg)
+			x = DrawTableCell(process.Info, width-x-1, x, y, fg, bg)
 
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.State, x, y)
-			x += (sState - len(process.State)) + 1
-
-			termbox.SetCell(x, y, '|', fg, bg)
-			x += 2
-			x += DisplayWord(process.Info, x, y)
-
+			// draw the last '|' of the table
 			termbox.SetCell(width-1, y, '|', fg, bg)
 		}
 	}
