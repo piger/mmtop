@@ -25,12 +25,9 @@
 package sqlgo
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"os"
-	"strings"
 	"time"
 )
 
@@ -138,7 +135,6 @@ func RunClient(configs []DbConnectionData) {
 		inConns <- config
 	}
 
-	// go PromptReader(cmdc, logc, quitc)
 	go LogPrinter(logc)
 	go DisplayResults(resc, quitc)
 
@@ -188,25 +184,6 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 					time.Sleep(time.Duration(5 * time.Second))
 				}
 			}(d)
-		}
-	}
-}
-
-func PromptReader(cmdc chan string, logc chan string, quitc chan bool) {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			// EOF ?
-			logc <- fmt.Sprintf("Error reading stdin: %s", err)
-			quitc <- true
-			return
-		} else {
-			if strings.Contains(text, "quit") || strings.Contains(text, "exit") {
-				quitc <- true
-				return
-			}
-			cmdc <- text
 		}
 	}
 }
