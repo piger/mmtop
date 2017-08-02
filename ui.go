@@ -54,10 +54,10 @@ func DisplayResults(resc chan ProcessList, control chan bool) {
 	}
 }
 
-func DisplayWord(s string, x, y int) (count int) {
+func DrawWord(s string, x, y int, fg, bg termbox.Attribute) (count int) {
 	maxWidth, _ := termbox.Size()
 	for _, c := range s {
-		termbox.SetCell(x, y, c, termbox.ColorDefault, termbox.ColorBlack)
+		termbox.SetCell(x, y, c, fg, bg)
 		x += 1
 		count += 1
 		if x >= maxWidth {
@@ -79,7 +79,7 @@ func DrawBoxLine(x, y, length int, fg, bg termbox.Attribute) {
 func DrawTableCell(s string, maxlength, x, y int, fg, bg termbox.Attribute) int {
 	termbox.SetCell(x, y, '|', fg, bg)
 	x += 2
-	x += DisplayWord(s, x, y)
+	x += DrawWord(s, x, y, fg, bg)
 	x += (maxlength - len(s)) + 1
 	return x
 }
