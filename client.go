@@ -134,8 +134,7 @@ func RunClient(configs []DbConnectionData) {
 		inConns <- config
 	}
 
-	go LogPrinter(logc)
-	go DisplayResults(resc, quitc)
+	go DisplayResults(resc, quitc, logc)
 
 	for {
 		select {
@@ -180,16 +179,6 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 					time.Sleep(time.Duration(5 * time.Second))
 				}
 			}(d)
-		}
-	}
-}
-
-func LogPrinter(logc chan string) {
-	for {
-		select {
-		// case msg := <-logc:
-		// 	fmt.Printf("log: %s\n", msg)
-		case <-logc:
 		}
 	}
 }

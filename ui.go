@@ -1,17 +1,23 @@
 package sqlgo
 
 import (
+	"fmt"
 	"github.com/nsf/termbox-go"
 	"math"
 	"strconv"
 	"time"
 )
 
+type LogMsg struct {
+	t time.Time
+	m string
+}
+
 func max(x, y int) int {
 	return int(math.Max(float64(x), float64(y)))
 }
 
-func DisplayResults(resc chan ProcessList, control chan bool) {
+func DisplayResults(resc chan ProcessList, control chan bool, logc chan string) {
 	if err := termbox.Init(); err != nil {
 		panic(err)
 	}
@@ -22,6 +28,8 @@ func DisplayResults(resc chan ProcessList, control chan bool) {
 	defer termbox.Close()
 
 	var uiQuitc chan bool = make(chan bool)
+	var logs []LogMsg
+	var maxLogs int = 4
 
 	go func() {
 		for {
@@ -43,11 +51,19 @@ func DisplayResults(resc chan ProcessList, control chan bool) {
 	for {
 		select {
 		case <-t.C:
-			DrawProcessList(status)
+			DrawProcessList(status, logs)
 			t.Reset(5 * time.Second)
 		case result := <-resc:
 			status[result.Conn.data.Name] = result
-			DrawProcessList(status)
+			DrawProcessList(status, logs)
+		case msg := <-logc:
+			logMsg := LogMsg{time.Now(), msg}
+			logs = append(logs, logMsg)
+			if len(logs) > maxLogs {
+				d := len(logs) - maxLogs
+				logs = logs[d:]
+			}
+			DrawProcessList(status, logs)
 		case <-uiQuitc:
 			return
 		}
@@ -84,7 +100,7 @@ func DrawTableCell(s string, maxlength, x, y int, fg, bg termbox.Attribute) int 
 	return x
 }
 
-func DrawProcessList(status map[string]ProcessList) {
+func DrawProcessList(status map[string]ProcessList, logs []LogMsg) {
 	fg := termbox.ColorDefault
 	bg := termbox.ColorDefault
 
@@ -116,7 +132,7 @@ func DrawProcessList(status map[string]ProcessList) {
 	}
 
 	// start drawing
-	width, _ := termbox.Size()
+	width, height := termbox.Size()
 	x := 0
 	y := 0
 
@@ -168,6 +184,22 @@ func DrawProcessList(status map[string]ProcessList) {
 	x = 0
 	y += 1
 	DrawBoxLine(x, y, width, fg, bg)
+
+	// draw log box
+	if len(logs) > 0 {
+		x = 0
+		y = height - 5
+		DrawBoxLine(x, y, width, fg, bg)
+
+		x = 0
+		y += 1
+		for _, logMsg := range logs {
+			line := fmt.Sprintf("%s %s", logMsg.t.Format("15:04:05"), logMsg.m)
+			DrawTableCell(line, width-2, x, y, fg, bg)
+			termbox.SetCell(width-1, y, '|', fg, bg)
+			y += 1
+		}
+	}
 
 	termbox.Flush()
 }
