@@ -126,7 +126,6 @@ func RunClient(configs []DbConnectionData) {
 	var outConns chan Connection = make(chan Connection)
 	var resc chan ProcessList = make(chan ProcessList)
 	var logc chan string = make(chan string)
-	var cmdc chan string = make(chan string)
 	var quitc chan bool = make(chan bool)
 
 	// feed the Connector with connection requests
@@ -145,9 +144,6 @@ func RunClient(configs []DbConnectionData) {
 		case client := <-outConns:
 			clients[client.data.Name] = client
 			go QueryRunner(client, logc)
-
-		case <-cmdc:
-			// nop (this was used for the test UI)
 		case <-quitc:
 			fmt.Printf("Exiting...\n")
 			return
