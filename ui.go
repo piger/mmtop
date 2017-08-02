@@ -2,8 +2,13 @@ package sqlgo
 
 import (
 	"github.com/nsf/termbox-go"
+	"math"
 	"strconv"
 )
+
+func max(x, y int) int {
+	return int(math.Max(float64(x), float64(y)))
+}
 
 func DisplayResults(in chan map[string]ProcessList, control chan bool) {
 	if err := termbox.Init(); err != nil {
@@ -42,49 +47,18 @@ func DisplayResults(in chan map[string]ProcessList, control chan bool) {
 			sCommand := len("Command")
 			sTime := len("Time")
 			sState := len("State")
-			for k, v := range status {
-				var l int
-				l = len(k)
-				if l > sName {
-					sName = l
-				}
+			for name, v := range status {
+				sName = max(len(name), sName)
 				for _, process := range v.Processes {
 					id := strconv.Itoa(process.Id)
-					l = len(id)
-					if l > sId {
-						sId = l
-					}
-
-					l = len(process.User)
-					if l > sUser {
-						sUser = l
-					}
-
-					l = len(process.Host)
-					if l > sHost {
-						sHost = l
-					}
-
-					l = len(process.Db)
-					if l > sDb {
-						sDb = l
-					}
-
-					l = len(process.Command)
-					if l > sCommand {
-						sCommand = l
-					}
-
+					sId = max(len(id), sId)
+					sUser = max(len(process.User), sUser)
+					sHost = max(len(process.Host), sHost)
+					sDb = max(len(process.Db), sDb)
+					sCommand = max(len(process.Command), sCommand)
 					timestamp := strconv.Itoa(process.Timestamp)
-					l = len(timestamp)
-					if l > sTime {
-						sTime = l
-					}
-
-					l = len(process.State)
-					if l > sState {
-						sState = l
-					}
+					sTime = max(len(timestamp), sTime)
+					sState = max(len(process.State), sState)
 				}
 			}
 
