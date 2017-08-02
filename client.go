@@ -58,6 +58,19 @@ type Process struct {
 	Info      string
 }
 
+func NewProcess(id int, user, host string, db sql.NullString, command string, timestamp int, state, info sql.NullString) Process {
+	return Process{
+		Id:        id,
+		User:      user,
+		Host:      host,
+		Db:        MayEmptyString(db),
+		Command:   command,
+		Timestamp: timestamp,
+		State:     MayEmptyString(state),
+		Info:      MayEmptyString(info),
+	}
+}
+
 func MayEmptyString(s sql.NullString) string {
 	if s.Valid {
 		return s.String
@@ -65,10 +78,7 @@ func MayEmptyString(s sql.NullString) string {
 	return ""
 }
 
-func (p Process) String() string {
-	return fmt.Sprintf("id=%d, user=%s, host=%s, db=%s, command=%s, timestamp=%d, state=%s, info=%s", p.Id, p.User, p.Host, p.Db, p.Command, p.Timestamp, p.State, p.Info)
-}
-
+// Run "show full processlist" every 5 seconds
 func QueryRunner(conn Connection, logc chan string) {
 	t := time.NewTimer(5 * time.Second)
 
@@ -99,8 +109,7 @@ func RunProcessList(conn Connection, logc chan string) {
 				logc <- fmt.Sprintf("Failed parsing of result row from %s: %s", conn.data.Name, err)
 			} else {
 				// do something with data
-				p := Process{id, user, host, MayEmptyString(db), command, timestamp, MayEmptyString(state), MayEmptyString(info)}
-				logc <- p.String()
+				p := NewProcess(id, user, host, db, command, timestamp, state, info)
 				processes = append(processes, p)
 			}
 		}
@@ -112,6 +121,7 @@ func RunProcessList(conn Connection, logc chan string) {
 	}
 }
 
+// Main entry point
 func RunClient(configs []DbConnectionData) {
 	var clients map[string]Connection = make(map[string]Connection)
 
@@ -122,11 +132,9 @@ func RunClient(configs []DbConnectionData) {
 	var cmdc chan string = make(chan string)
 	var quitc chan bool = make(chan bool)
 
+	// feed the Connector with connection requests
 	go Connector(inConns, outConns, resc, logc)
-
-	fmt.Printf("Feeding Connector with connections...\n")
 	for _, config := range configs {
-		fmt.Printf("Feeding Connector with %s\n", config)
 		inConns <- config
 	}
 
@@ -136,11 +144,14 @@ func RunClient(configs []DbConnectionData) {
 
 	for {
 		select {
+		// Listens for established connections from the Connector (via 'outConns') and starts a QueryRunner
+		// for that Connection.
 		case client := <-outConns:
 			clients[client.data.Name] = client
 			go QueryRunner(client, logc)
+
 		case <-cmdc:
-			// nop
+			// nop (this was used for the test UI)
 		case <-quitc:
 			fmt.Printf("Exiting...\n")
 			return
@@ -148,6 +159,9 @@ func RunClient(configs []DbConnectionData) {
 	}
 }
 
+// Listens on 'in' for incoming "connection requests" (as DbConnectionData objects), attempts to
+// connect to the database and in case of success write a Connection object into 'out'.
+// Will log via 'logc'.
 func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessList, logc chan string) {
 	for {
 		select {
