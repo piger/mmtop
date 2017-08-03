@@ -13,11 +13,15 @@ type LogMsg struct {
 	m string
 }
 
+func NewLog(format string, args ...interface{}) LogMsg {
+	return LogMsg{time.Now(), fmt.Sprintf(format, args...)}
+}
+
 func max(x, y int) int {
 	return int(math.Max(float64(x), float64(y)))
 }
 
-func DisplayResults(resc chan ProcessList, control chan bool, logc chan string) {
+func DisplayResults(resc chan ProcessList, control chan bool, logc chan LogMsg) {
 	if err := termbox.Init(); err != nil {
 		panic(err)
 	}
@@ -57,8 +61,7 @@ func DisplayResults(resc chan ProcessList, control chan bool, logc chan string) 
 			status[result.Conn.data.Name] = result
 			DrawProcessList(status, logs)
 		case msg := <-logc:
-			logMsg := LogMsg{time.Now(), msg}
-			logs = append(logs, logMsg)
+			logs = append(logs, msg)
 			if len(logs) > maxLogs {
 				d := len(logs) - maxLogs
 				logs = logs[d:]

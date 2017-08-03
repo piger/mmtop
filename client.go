@@ -76,7 +76,7 @@ func MayEmptyString(s sql.NullString) string {
 }
 
 // Run "show full processlist" every 5 seconds
-func QueryRunner(conn Connection, logc chan string) {
+func QueryRunner(conn Connection, logc chan LogMsg) {
 	t := time.NewTimer(5 * time.Second)
 
 	RunProcessList(conn, logc)
@@ -91,10 +91,10 @@ func QueryRunner(conn Connection, logc chan string) {
 	}
 }
 
-func RunProcessList(conn Connection, logc chan string) {
+func RunProcessList(conn Connection, logc chan LogMsg) {
 	rows, err := conn.db.Query("SHOW FULL PROCESSLIST")
 	if err != nil {
-		logc <- fmt.Sprintf("ps query failed on %s: %s", conn.data.Name, err)
+		logc <- NewLog("ps query failed on %s: %s", conn.data.Name, err)
 	} else {
 		var processes []Process
 		defer rows.Close()
@@ -103,7 +103,7 @@ func RunProcessList(conn Connection, logc chan string) {
 			var user, host, command string
 			var db, state, info sql.NullString
 			if err := rows.Scan(&id, &user, &host, &db, &command, &timestamp, &state, &info); err != nil {
-				logc <- fmt.Sprintf("Failed parsing of result row from %s: %s", conn.data.Name, err)
+				logc <- NewLog("Failed parsing of result row from %s: %s", conn.data.Name, err)
 			} else {
 				// do something with data
 				p := NewProcess(id, user, host, db, command, timestamp, state, info)
@@ -111,7 +111,7 @@ func RunProcessList(conn Connection, logc chan string) {
 			}
 		}
 		if err := rows.Err(); err != nil {
-			logc <- fmt.Sprintf("Error after reading rows from %s: %s", conn.data.Name, err)
+			logc <- NewLog("Error after reading rows from %s: %s", conn.data.Name, err)
 		}
 		plist := ProcessList{conn, processes}
 		conn.result <- plist
@@ -125,7 +125,7 @@ func RunClient(configs []DbConnectionData) {
 	var inConns chan DbConnectionData = make(chan DbConnectionData)
 	var outConns chan Connection = make(chan Connection)
 	var resc chan ProcessList = make(chan ProcessList)
-	var logc chan string = make(chan string)
+	var logc chan LogMsg = make(chan LogMsg)
 	var quitc chan bool = make(chan bool)
 
 	// feed the Connector with connection requests
@@ -153,7 +153,7 @@ func RunClient(configs []DbConnectionData) {
 // Listens on 'in' for incoming "connection requests" (as DbConnectionData objects), attempts to
 // connect to the database and in case of success write a Connection object into 'out'.
 // Will log via 'logc'.
-func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessList, logc chan string) {
+func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessList, logc chan LogMsg) {
 	for {
 		select {
 		case d := <-in:
@@ -161,7 +161,7 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 				for {
 					db, err := sql.Open("mysql", fmt.Sprintf("%s/mysql", data))
 					if err != nil {
-						logc <- fmt.Sprintf("Error creating DB connection object: %s", err)
+						logc <- NewLog("Error creating DB connection object: %s", err)
 						return
 					}
 					if err := db.Ping(); err == nil {
@@ -175,7 +175,7 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 						out <- conn
 						return
 					}
-					logc <- fmt.Sprintf("Connection to %s failed; sleeping 5 seconds", data.Name)
+					logc <- NewLog("Connection to %s failed; sleeping 5 seconds", data.Name)
 					time.Sleep(time.Duration(5 * time.Second))
 				}
 			}(d)
