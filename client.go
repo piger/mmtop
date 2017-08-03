@@ -1,27 +1,3 @@
-// mysql> describe INFORMATION_SCHEMA.PROCESSLIST;
-// +---------+---------------------+------+-----+---------+-------+
-// | Field   | Type                | Null | Key | Default | Extra |
-// +---------+---------------------+------+-----+---------+-------+
-// | ID      | bigint(21) unsigned | NO   |     | 0       |       |
-// | USER    | varchar(32)         | NO   |     |         |       |
-// | HOST    | varchar(64)         | NO   |     |         |       |
-// | DB      | varchar(64)         | YES  |     | NULL    |       |
-// | COMMAND | varchar(16)         | NO   |     |         |       |
-// | TIME    | int(7)              | NO   |     | 0       |       |
-// | STATE   | varchar(64)         | YES  |     | NULL    |       |
-// | INFO    | longtext            | YES  |     | NULL    |       |
-// +---------+---------------------+------+-----+---------+-------+
-// 8 rows in set (0.00 sec)
-
-// mysql> SELECT ID, USER, HOST, DB, COMMAND, TIME, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST;
-// +----+------+-----------+-------+---------+-------+-----------+-------------------------------------------------------------------------------------------+
-// | ID | USER | HOST      | DB    | COMMAND | TIME  | STATE     | INFO                                                                                      |
-// +----+------+-----------+-------+---------+-------+-----------+-------------------------------------------------------------------------------------------+
-// | 26 | root | localhost | mysql | Query   |     0 | executing | SELECT ID, USER, HOST, DB, COMMAND, TIME, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST |
-// |  4 | root | localhost | NULL  | Sleep   | 33363 |           | NULL                                                                                      |
-// +----+------+-----------+-------+---------+-------+-----------+-------------------------------------------------------------------------------------------+
-// 2 rows in set (0.00 sec)
-
 package sqlgo
 
 import (
@@ -164,7 +140,10 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 						logc <- NewLog("Error creating DB connection object: %s", err)
 						return
 					}
-					if err := db.Ping(); err == nil {
+					if err := db.Ping(); err != nil {
+						logc <- NewLog("Connection to %s failed; sleeping 5 seconds", data.Name)
+						time.Sleep(time.Duration(5 * time.Second))
+					} else {
 						conn := Connection{
 							data:    data,
 							db:      db,
@@ -175,8 +154,6 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 						out <- conn
 						return
 					}
-					logc <- NewLog("Connection to %s failed; sleeping 5 seconds", data.Name)
-					time.Sleep(time.Duration(5 * time.Second))
 				}
 			}(d)
 		}

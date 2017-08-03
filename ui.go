@@ -3,23 +3,9 @@ package sqlgo
 import (
 	"fmt"
 	"github.com/nsf/termbox-go"
-	"math"
 	"strconv"
 	"time"
 )
-
-type LogMsg struct {
-	t time.Time
-	m string
-}
-
-func NewLog(format string, args ...interface{}) LogMsg {
-	return LogMsg{time.Now(), fmt.Sprintf(format, args...)}
-}
-
-func max(x, y int) int {
-	return int(math.Max(float64(x), float64(y)))
-}
 
 func DisplayResults(resc chan ProcessList, control chan bool, logc chan LogMsg) {
 	if err := termbox.Init(); err != nil {
@@ -39,7 +25,7 @@ func DisplayResults(resc chan ProcessList, control chan bool, logc chan LogMsg) 
 		for {
 			event := termbox.PollEvent()
 			if event.Type == termbox.EventKey {
-				if event.Ch == 'q' {
+				if event.Ch == 'q' || event.Key == termbox.KeyEsc {
 					uiQuitc <- true
 				}
 			}
