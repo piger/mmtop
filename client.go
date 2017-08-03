@@ -10,9 +10,17 @@ import (
 type Connection struct {
 	data    DbConnectionData
 	db      *sql.DB
-	in      chan string
 	result  chan ProcessList
 	control chan bool
+}
+
+func NewConnection(data DbConnectionData, db *sql.DB, result chan ProcessList) Connection {
+	return Connection{
+		data:    data,
+		db:      db,
+		result:  result,
+		control: make(chan bool),
+	}
 }
 
 type ProcessList struct {
@@ -89,8 +97,7 @@ func RunProcessList(conn Connection, logc chan LogMsg) {
 		if err := rows.Err(); err != nil {
 			logc <- NewLog("Error after reading rows from %s: %s", conn.data.Name, err)
 		}
-		plist := ProcessList{conn, processes}
-		conn.result <- plist
+		conn.result <- ProcessList{conn, processes}
 	}
 }
 
@@ -132,7 +139,8 @@ func RunClient(configs []DbConnectionData) {
 func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessList, logc chan LogMsg) {
 	for {
 		select {
-		case d := <-in:
+		case newConnectionData := <-in:
+
 			go func(data DbConnectionData) {
 				for {
 					db, err := sql.Open("mysql", fmt.Sprintf("%s/mysql", data))
@@ -141,21 +149,15 @@ func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessL
 						return
 					}
 					if err := db.Ping(); err != nil {
-						logc <- NewLog("Connection to %s failed; sleeping 5 seconds", data.Name)
+						logc <- NewLog("Connection to %s (%s:%d) failed; retrying in 5 seconds.", data.Name, data.Address, data.Port)
 						time.Sleep(time.Duration(5 * time.Second))
 					} else {
-						conn := Connection{
-							data:    data,
-							db:      db,
-							in:      make(chan string),
-							result:  resc,
-							control: make(chan bool),
-						}
-						out <- conn
+						out <- NewConnection(data, db, resc)
 						return
 					}
 				}
-			}(d)
+			}(newConnectionData)
+
 		}
 	}
 }
