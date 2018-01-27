@@ -1,4 +1,4 @@
-package sqlgo
+package mmtop
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package sqlgo
+package mmtop
 
 import (
 	"database/sql"
@@ -8,13 +8,13 @@ import (
 )
 
 type Connection struct {
-	data    DbConnectionData
+	data    DbConnectionInfo
 	db      *sql.DB
 	result  chan ProcessList
 	control chan bool
 }
 
-func NewConnection(data DbConnectionData, db *sql.DB, result chan ProcessList) Connection {
+func NewConnection(data DbConnectionInfo, db *sql.DB, result chan ProcessList) Connection {
 	return Connection{
 		data:    data,
 		db:      db,
@@ -102,10 +102,10 @@ func RunProcessList(conn Connection, logc chan LogMsg) {
 }
 
 // Main entry point
-func RunClient(configs []DbConnectionData) {
+func RunClient(configs []DbConnectionInfo) {
 	var clients map[string]Connection = make(map[string]Connection)
 
-	var inConns chan DbConnectionData = make(chan DbConnectionData)
+	var inConns chan DbConnectionInfo = make(chan DbConnectionInfo)
 	var outConns chan Connection = make(chan Connection)
 	var resc chan ProcessList = make(chan ProcessList)
 	var logc chan LogMsg = make(chan LogMsg)
@@ -133,15 +133,15 @@ func RunClient(configs []DbConnectionData) {
 	}
 }
 
-// Listens on 'in' for incoming "connection requests" (as DbConnectionData objects), attempts to
+// Listens on 'in' for incoming "connection requests" (as DbConnectionInfo objects), attempts to
 // connect to the database and in case of success write a Connection object into 'out'.
 // Will log via 'logc'.
-func Connector(in chan DbConnectionData, out chan Connection, resc chan ProcessList, logc chan LogMsg) {
+func Connector(in chan DbConnectionInfo, out chan Connection, resc chan ProcessList, logc chan LogMsg) {
 	for {
 		select {
 		case newConnectionData := <-in:
 
-			go func(data DbConnectionData) {
+			go func(data DbConnectionInfo) {
 				for {
 					db, err := sql.Open("mysql", fmt.Sprintf("%s/mysql", data))
 					if err != nil {
