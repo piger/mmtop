@@ -3,10 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"path": "appengine/cloudsql",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "KIui02MZXkQsIP+Oir4Iv/tq/SU=",
 			"path": "github.com/go-ini/ini",
 			"revision": "d3de07a94d22b4a0972deb4b96d790c2c0ce8333",
@@ -21,7 +17,13 @@
 			"revisionTime": "2016-12-01T11:50:36Z",
 			"version": "v1",
 			"versionExact": "v1.3"
+		},
+		{
+			"checksumSHA1": "KAhDGNPMboj3oaExcTAySwLlJB0=",
+			"path": "github.com/nsf/termbox-go",
+			"revision": "88b7b944be8bc8d8ec6195fca97c5869ba20f99d",
+			"revisionTime": "2018-01-29T07:27:28Z"
 		}
 	],
-	"rootPath": "github.com/piger/sqlgo"
+	"rootPath": "github.com/piger/mmtop"
 }

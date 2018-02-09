@@ -7,8 +7,9 @@ This is an experimental project to rewrite [mmtop](https://github.com/osheroff/m
 To build this tool you need [govendor](https://github.com/kardianos/govendor).
 
 ``` bash
+go get -u github.com/kardianos/govendor
 govendor sync
-govendor build ./cmd/sqlgo
+govendor build ./cmd/mmtop
 ```
 
 You need to supply a configuration file:
